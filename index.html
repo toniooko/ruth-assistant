@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#ffffff"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Ruth"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<title>Ruth v6</title>
+<link rel="manifest" href="manifest.json"/>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;width:100%;background:#f5f5f7;overflow:hidden;}
+body{position:fixed;width:100%;overscroll-behavior:none;}
+#root{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+::-webkit-scrollbar{width:0;}
+input,textarea,select,button{font-family:'Inter',sans-serif;}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+@keyframes slideDown{from{transform:translateY(-100%);}to{transform:translateY(0);}}
+@keyframes popIn{from{transform:scale(0.94);opacity:0;}to{transform:scale(1);opacity:1;}}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.2;}}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
+@keyframes barWave{0%,100%{transform:scaleY(0.3);}50%{transform:scaleY(1);}}
+@keyframes shimmer{0%{background-position:-200px 0;}100%{background-position:200px 0;}}
+
+.msg{animation:fadeUp 0.25s ease;}
+.slide{animation:slideUp 0.28s cubic-bezier(0.32,0.72,0,1);}
+.slideDown{animation:slideDown 0.25s ease;}
+.pop{animation:popIn 0.2s ease;}
+.bar{animation:barWave 0.7s ease-in-out infinite;transform-origin:bottom;}
+.spin{animation:spin 1s linear infinite;}
+.pulse{animation:pulse 2s ease-in-out infinite;}
+
+/* ── INPUTS ── */
+.inp{width:100%;background:#f5f5f7;border:1.5px solid #e5e5ea;border-radius:12px;padding:12px 14px;font-size:15px;color:#1c1c1e;outline:none;font-family:'Inter',sans-serif;transition:border-color 0.2s;}
+.inp:focus{border-color:#d4607a;background:#fff;}
+.inp::placeholder{color:#aeaeb2;}
+select.inp{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23aeaeb2' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+
+/* ── BUTTONS ── */
+.btn-primary{background:linear-gradient(135deg,#d4607a,#a8405a);color:#fff;border:none;border-radius:14px;padding:14px 0;font-size:15px;font-weight:700;cursor:pointer;width:100%;transition:opacity 0.2s;}
+.btn-primary:disabled{opacity:0.4;}
+.btn-secondary{background:#f5f5f7;color:#3c3c43;border:1.5px solid #e5e5ea;border-radius:14px;padding:12px 0;font-size:14px;font-weight:600;cursor:pointer;width:100%;transition:all 0.2s;}
+.btn-icon{background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:10px;transition:background 0.15s;}
+.btn-icon:active{background:#f5f5f7;}
+
+/* ── CARDS ── */
+.card{background:#fff;border-radius:16px;border:1px solid #f0f0f0;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+
+/* ── PILLS ── */
+.pill{border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid;transition:all 0.18s;white-space:nowrap;}
+
+/* ── TOGGLE SWITCH ── */
+.toggle{position:relative;width:48px;height:28px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:#e5e5ea;border-radius:28px;transition:0.3s;}
+.toggle-slider:before{position:absolute;content:"";height:22px;width:22px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
+.toggle input:checked + .toggle-slider{background:#d4607a;}
+.toggle input:checked + .toggle-slider:before{transform:translateX(20px);}
+
+/* ── SEGMENT CONTROL ── */
+.segment{display:flex;background:#f5f5f7;border-radius:10px;padding:3px;}
+.seg-btn{flex:1;padding:7px 0;font-size:13px;font-weight:600;color:#8e8e93;background:transparent;border:none;border-radius:8px;cursor:pointer;transition:all 0.2s;}
+.seg-btn.active{background:#fff;color:#1c1c1e;box-shadow:0 1px 3px rgba(0,0,0,0.12);}
+
+/* ── USAGE BAR ── */
+.usage-bar{height:6px;border-radius:3px;background:#f0f0f0;overflow:hidden;}
+.usage-fill{height:100%;border-radius:3px;transition:width 0.5s ease;}
+
+input[type=datetime-local]::-webkit-calendar-picker-indicator,
+input[type=date]::-webkit-calendar-picker-indicator,
+input[type=time]::-webkit-calendar-picker-indicator{opacity:0.5;cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script>
+'use strict';
+const {useState,useRef,useEffect,useCallback,useMemo}=React;
+const h=React.createElement;
+
+/* ── STORAGE ─────────────────────────────────────────────────────────────── */
+const load=(k,fb)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb;}catch{return fb;}};
+const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}};
+
+/* ── CONSTANTS ───────────────────────────────────────────────────────────── */
+const ROSE='#d4607a', ROSE_D='#a8405a', ROSE_BG='#fff0f3';
+const BLUE='#007aff', GREEN='#34c759', AMBER='#ff9500', RED='#ff3b30';
+const GRAY='#8e8e93', GRAY2='#f5f5f7', GRAY3='#e5e5ea', DARK='#1c1c1e';
+const SURFACE='#fff', BG='#f5f5f7';
+
+const CATS={work:'💼',health:'💊',personal:'🌿',finance:'💰',social:'👥',shopping:'🛍️',other:'📌'};
+const AMETA={
+  call:{icon:'📞',color:GREEN,bg:'#f0faf4',label:'Call'},
+  whatsapp:{icon:'💬',color:'#25d366',bg:'#f0fdf5',label:'WhatsApp'},
+  email:{icon:'✉️',color:BLUE,bg:'#f0f5ff',label:'Email'},
+  research:{icon:'🔍',color:AMBER,bg:'#fff8f0',label:'Research'},
+  reminder:{icon:'🔔',color:ROSE,bg:ROSE_BG,label:'Reminder'},
+  calendar:{icon:'📅',color:'#5856d6',bg:'#f5f5ff',label:'Calendar'},
+  note:{icon:'📝',color:'#ff9500',bg:'#fff9f0',label:'Note'},
+  translate:{icon:'🌍',color:BLUE,bg:'#f0f5ff',label:'Translate'},
+};
+const TABS=[
+  {id:'chat',icon:'💬',label:'Chat'},
+  {id:'email',icon:'📧',label:'Email'},
+  {id:'reminders',icon:'🔔',label:'Alerts'},
+  {id:'calendar',icon:'📅',label:'Calendar'},
+  {id:'notes',icon:'📝',label:'Notes'},
+];
+
+/* ── HELPERS ─────────────────────────────────────────────────────────────── */
+function timeAgo(ts){const s=Math.floor((Date.now()-ts)/1000);if(s<60)return'just now';if(s<3600)return`${Math.floor(s/60)}m`;if(s<86400)return`${Math.floor(s/3600)}h`;return`${Math.floor(s/86400)}d`;}
+function fmtDue(iso){return new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:true});}
+function fmtDate(iso){return new Date(iso).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});}
+function timeUntil(iso){const d=new Date(iso)-new Date();if(d<0)return'Overdue';const m=Math.floor(d/60000);if(m<60)return`${m}m`;const hh=Math.floor(m/60);if(hh<24)return`${hh}h`;return`${Math.floor(hh/24)}d`;}
+
+function playSound(type){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const notes=type==='calendar'?[523,659,784,1047]:[880,660,880];
+    notes.forEach((freq,i)=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.frequency.value=freq;o.type='sine';
+      const t=ctx.currentTime+i*0.18;
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.3,t+0.02);g.gain.exponentialRampToValueAtTime(0.001,t+0.4);
+      o.start(t);o.stop(t+0.45);
+    });
+  }catch{}
+}
+
+/* ── DEMO DATA ───────────────────────────────────────────────────────────── */
+const DEF_CONTACTS=[
+  {id:1,name:'Mom',phone:'+1234567890',email:'mom@email.com'},
+  {id:2,name:'John',phone:'+1987654321',email:'john@email.com'},
+  {id:3,name:'Boss',phone:'+1555000111',email:'boss@work.com'},
+];
+const DEMO_EMAILS=[
+  {id:'g1',from:'john.smith@gmail.com',fromName:'John Smith',subject:'Project update needed',body:'Hey, can you send me the latest project status? We have a board meeting Friday and I need the numbers by Thursday EOD.',date:new Date(Date.now()-7200000).toISOString(),read:false,provider:'gmail'},
+  {id:'g2',from:'clinic@health.com',fromName:'Health Clinic',subject:'Appointment reminder: Tomorrow 2pm',body:'This is a reminder for your dental appointment tomorrow at 2:00 PM. Please arrive 10 minutes early.',date:new Date(Date.now()-28800000).toISOString(),read:false,provider:'gmail'},
+  {id:'o1',from:'hr@company.com',fromName:'HR Department',subject:'Q4 performance review due',body:'Please complete your self-assessment in the HR portal by December 15th. This is required for all staff.',date:new Date(Date.now()-3600000).toISOString(),read:false,provider:'outlook'},
+];
+const INTRO=`Hi! I'm Ruth 👋\n\nI'm your personal assistant. Here's what I can do:\n\n📞 Call contacts  💬 WhatsApp  ✉️ Email\n🔍 Research  🔔 Reminders  📅 Calendar\n📝 Notes & To-dos  🌍 Translate\n📧 Read Gmail & Outlook  📆 Schedule messages\n\nTap the mic or type to get started.`;
+
+/* ── TOKEN ESTIMATION ────────────────────────────────────────────────────── */
+const estimateTokens=(text)=>Math.ceil((text||'').length/4);
+const MODEL_COSTS={
+  'claude-sonnet-4-20250514':{input:3,output:15,name:'Claude Sonnet 4'},
+  'claude-haiku-4-5-20251001':{input:0.8,output:4,name:'Claude Haiku 4.5'},
+  'gemini-2.0-flash':{input:0.1,output:0.4,name:'Gemini 2.0 Flash'},
+  'gemini-1.5-pro':{input:3.5,output:10.5,name:'Gemini 1.5 Pro'},
+};
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  MAIN APP                                                                  */
+/* ══════════════════════════════════════════════════════════════════════════ */
+function Ruth(){
+  /* ── SETTINGS ── */
+  const [anthropicKey,setAnthropicKey]=useState(()=>load('r6_ak',''));
+  const [geminiKey,setGeminiKey]=useState(()=>load('r6_gk',''));
+  const [activeProvider,setActiveProvider]=useState(()=>load('r6_prov','anthropic')); // anthropic|gemini
+  const [anthropicModel,setAnthropicModel]=useState(()=>load('r6_am','claude-sonnet-4-20250514'));
+  const [geminiModel,setGeminiModel]=useState(()=>load('r6_gm','gemini-2.0-flash'));
+  const [voiceMode,setVoiceMode]=useState(()=>load('r6_voice',false));
+  const [notifPerm,setNotifPerm]=useState(()=>{try{return typeof Notification!=='undefined'?Notification.permission:'denied';}catch{return'denied';}});
+
+  /* ── USAGE TRACKING ── */
+  const [usage,setUsage]=useState(()=>load('r6_usage',{totalInputTokens:0,totalOutputTokens:0,totalCalls:0,sessions:[]}));
+
+  /* ── DATA ── */
+  const [contacts,setContacts]=useState(()=>load('r6_contacts',DEF_CONTACTS));
+  const [reminders,setReminders]=useState(()=>load('r6_reminders',[]));
+  const [events,setEvents]=useState(()=>load('r6_events',[]));
+  const [notes,setNotes]=useState(()=>load('r6_notes',[]));
+  const [memory,setMemory]=useState(()=>load('r6_memory',[]));
+  const [history,setHistory]=useState(()=>load('r6_history',[]));
+  const [messages,setMessages]=useState([{role:'assistant',text:INTRO,ts:Date.now()}]);
+  const [emails,setEmails]=useState(DEMO_EMAILS);
+  const [scheduled,setScheduled]=useState(()=>load('r6_scheduled',[])); // scheduled messages
+  const [gmailOn,setGmailOn]=useState(()=>load('r6_gmail',false));
+  const [outlookOn,setOutlookOn]=useState(()=>load('r6_outlook',false));
+
+  /* ── UI ── */
+  const [tab,setTab]=useState('chat');
+  const [modal,setModal]=useState(null);
+  const [input,setInput]=useState('');
+  const [listening,setListening]=useState(false);
+  const [speaking,setSpeaking]=useState(false);
+  const [loading,setLoading]=useState(false);
+  const [liveText,setLiveText]=useState('');
+  const [toasts,setToasts]=useState([]);
+  const [imgPreview,setImgPreview]=useState(null);
+  const [imgFile,setImgFile]=useState(null);
+  const [remFilter,setRemFilter]=useState('active');
+  const [noteFilter,setNoteFilter]=useState('all');
+  const [selEmail,setSelEmail]=useState(null);
+  const [emailReply,setEmailReply]=useState('');
+  const [replyLoading,setReplyLoading]=useState(false);
+  const [emailSearch,setEmailSearch]=useState('');
+  const [emailFilter,setEmailFilter]=useState('all');
+  const [inAppNotif,setInAppNotif]=useState(null);
+  const [settingsTab,setSettingsTab]=useState('api'); // api|voice|about
+
+  /* ── FORMS ── */
+  const bRem={title:'',note:'',category:'other',priority:'medium',dueAt:''};
+  const bEvt={title:'',location:'',date:'',time:'',note:''};
+  const bNote={title:'',body:'',type:'note',todos:[]};
+  const bSched={to:'',via:'whatsapp',message:'',sendAt:''};
+  const [rForm,setRForm]=useState(bRem);
+  const [eForm,setEForm]=useState(bEvt);
+  const [nForm,setNForm]=useState(bNote);
+  const [schedForm,setSchedForm]=useState(bSched);
+  const [newTodo,setNewTodo]=useState('');
+  const [nContact,setNContact]=useState({name:'',phone:'',email:''});
+  const [newMem,setNewMem]=useState('');
+  const [actionModal,setActionModal]=useState(null);
+
+  const bottomRef=useRef();const recRef=useRef();
+  const inputRef=useRef();const fileRef=useRef();
+  const synthRef=useRef(window.speechSynthesis);
+  const notifTimers=useRef([]);
+
+  /* ── PERSIST ── */
+  useEffect(()=>save('r6_ak',anthropicKey),[anthropicKey]);
+  useEffect(()=>save('r6_gk',geminiKey),[geminiKey]);
+  useEffect(()=>save('r6_prov',activeProvider),[activeProvider]);
+  useEffect(()=>save('r6_am',anthropicModel),[anthropicModel]);
+  useEffect(()=>save('r6_gm',geminiModel),[geminiModel]);
+  useEffect(()=>save('r6_voice',voiceMode),[voiceMode]);
+  useEffect(()=>save('r6_contacts',contacts),[contacts]);
+  useEffect(()=>save('r6_reminders',reminders),[reminders]);
+  useEffect(()=>save('r6_events',events),[events]);
+  useEffect(()=>save('r6_notes',notes),[notes]);
+  useEffect(()=>save('r6_memory',memory),[memory]);
+  useEffect(()=>save('r6_history',history),[history]);
+  useEffect(()=>save('r6_gmail',gmailOn),[gmailOn]);
+  useEffect(()=>save('r6_outlook',outlookOn),[outlookOn]);
+  useEffect(()=>save('r6_usage',usage),[usage]);
+  useEffect(()=>save('r6_scheduled',scheduled),[scheduled]);
+  useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:'smooth'});},[messages,loading]);
+
+  /* ── TOAST ── */
+  const toast=useCallback((msg,type='info',dur=3500)=>{
+    const id=Date.now()+Math.random();
+    setToasts(t=>[...t,{id,msg,type}]);
+    setTimeout(()=>setToasts(t=>t.filter(x=>x.id!==id)),dur);
+  },[]);
+
+  /* ── NOTIFICATION ── */
+  const fireNotif=useCallback((title,body,type='reminder')=>{
+    playSound(type);
+    setInAppNotif({title,body,type});
+    setTimeout(()=>setInAppNotif(null),8000);
+    try{if(typeof Notification!=='undefined'&&Notification.permission==='granted')new Notification(`Ruth: ${title}`,{body,icon:'icon-192.png'});}catch{}
+    if(voiceMode)ruthSpeak(`${type==='calendar'?'Calendar':'Reminder'}: ${title}`);
+  },[voiceMode]);
+
+  const scheduleNotif=useCallback((item,type)=>{
+    const due=new Date(type==='calendar'?item.dateTime:item.dueAt);
+    const ms=due-new Date();if(ms<=0)return;
+    if(ms>600000){const t=setTimeout(()=>fireNotif(`${item.title} in 10 minutes`,fmtDue(due),type),ms-600000);notifTimers.current.push(t);}
+    const t2=setTimeout(()=>{fireNotif(item.title,type==='calendar'?'Starting now!':`Time for: ${item.title}`,type);if(type==='reminder')setReminders(rs=>rs.map(r=>r.id===item.id?{...r,notified:true}:r));},ms);
+    notifTimers.current.push(t2);
+  },[fireNotif]);
+
+  useEffect(()=>{
+    reminders.filter(r=>!r.done&&!r.notified&&new Date(r.dueAt)>new Date()).forEach(r=>scheduleNotif(r,'reminder'));
+    events.filter(e=>new Date(e.dateTime)>new Date()).forEach(e=>scheduleNotif(e,'calendar'));
+    return()=>notifTimers.current.forEach(clearTimeout);
+  },[]);
+
+  /* ── SCHEDULED MESSAGE DELIVERY ── */
+  useEffect(()=>{
+    const check=setInterval(()=>{
+      const now=new Date();
+      scheduled.forEach(s=>{
+        if(!s.sent&&new Date(s.sendAt)<=now){
+          fireNotif(`Scheduled ${s.via}: ${s.to}`,s.message.slice(0,50),'reminder');
+          toast(`Scheduled message to ${s.to} is ready to send`,'info');
+          setScheduled(ss=>ss.map(x=>x.id===s.id?{...x,sent:true}:x));
+        }
+      });
+    },30000);
+    return()=>clearInterval(check);
+  },[scheduled]);
+
+  /* ── VOICE OUTPUT ── */
+  function ruthSpeak(text){
+    if(!synthRef.current||!voiceMode)return;
+    synthRef.current.cancel();
+    const utt=new SpeechSynthesisUtterance(text.replace(/[*#`~\u{1F300}-\u{1FFFF}]/gu,'').replace(/https?:\/\/\S+/g,'').slice(0,280));
+    utt.lang='en-US';utt.rate=0.93;utt.pitch=1.15;
+    const vv=synthRef.current.getVoices();
+    const fem=vv.find(v=>/samantha|victoria|karen|moira|zira|susan/i.test(v.name));
+    if(fem)utt.voice=fem;
+    utt.onstart=()=>setSpeaking(true);utt.onend=()=>setSpeaking(false);
+    synthRef.current.speak(utt);
+  }
+  const stopSpeak=()=>{synthRef.current?.cancel();setSpeaking(false);};
+
+  /* ── VOICE INPUT ── */
+  function startListen(){
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){toast('Voice requires Chrome browser','error');return;}
+    const rec=new SR();rec.continuous=false;rec.interimResults=true;rec.lang='en-US';
+    rec.onstart=()=>{setListening(true);setLiveText('');};
+    rec.onresult=(e)=>{const t=Array.from(e.results).map(r=>r[0].transcript).join('');setLiveText(t);setInput(t);};
+    rec.onend=()=>{setListening(false);setLiveText('');};
+    rec.onerror=()=>{setListening(false);toast('Mic error','error');};
+    recRef.current=rec;rec.start();
+  }
+  const stopListen=()=>{recRef.current?.stop();setListening(false);};
+
+  /* ── CONTACT PICKER ── */
+  async function pickContacts(){
+    if(!('contacts' in navigator)){toast('Chrome on Android only. Add manually on iPhone.','error');return;}
+    try{
+      const p=await navigator.contacts.select(['name','tel','email'],{multiple:true});
+      const a=p.map((c,i)=>({id:Date.now()+i,name:c.name?.[0]||'Unknown',phone:c.tel?.[0]||'',email:c.email?.[0]||''}));
+      setContacts(prev=>{const m=[...prev];a.forEach(nc=>{if(!m.find(x=>x.name===nc.name))m.push(nc);});return m;});
+      toast(`Added ${a.length} contact(s)`,'success');
+    }catch{toast('Cancelled','info');}
+  }
+
+  function findContact(name){
+    if(!name)return null;
+    const n=name.toLowerCase().trim();
+    return contacts.find(c=>c.name.toLowerCase().includes(n)||n.includes(c.name.toLowerCase().split(' ')[0]));
+  }
+
+  /* ── DATA OPS ── */
+  function addReminder(form){
+    const r={...form,id:Date.now(),done:false,notified:false,dueAt:form.dueAt||new Date(Date.now()+3600000).toISOString()};
+    setReminders(rs=>[...rs,r]);scheduleNotif(r,'reminder');
+    logAct('reminder',`Set: ${r.title}`,fmtDue(r.dueAt));
+    toast('Reminder set — you\'ll be notified!','success');setModal(null);setRForm(bRem);
+  }
+  const toggleRem=(id)=>setReminders(rs=>rs.map(r=>r.id===id?{...r,done:!r.done}:r));
+  const delRem=(id)=>setReminders(rs=>rs.filter(r=>r.id!==id));
+
+  function addEvent(form){
+    const e={...form,id:Date.now(),dateTime:`${form.date}T${form.time||'00:00'}`};
+    setEvents(ev=>[...ev,e].sort((a,b)=>new Date(a.dateTime)-new Date(b.dateTime)));
+    scheduleNotif(e,'calendar');logAct('calendar',form.title,`${fmtDate(e.dateTime)} ${form.time}`);
+    toast('Event added!','success');setModal(null);setEForm(bEvt);
+  }
+  const delEvent=(id)=>setEvents(ev=>ev.filter(e=>e.id!==id));
+
+  function addNote(form){
+    setNotes(ns=>[{...form,id:Date.now(),ts:Date.now()},...ns]);
+    logAct('note',form.title,'');toast('Note saved','success');setModal(null);setNForm(bNote);
+  }
+  const delNote=(id)=>setNotes(ns=>ns.filter(n=>n.id!==id));
+  const toggleTodo=(nid,tid)=>setNotes(ns=>ns.map(n=>n.id===nid?{...n,todos:n.todos.map(t=>t.id===tid?{...t,done:!t.done}:t)}:n));
+
+  function addScheduled(form){
+    const contact=findContact(form.to);
+    const s={...form,id:Date.now(),sent:false,contact};
+    setScheduled(ss=>[...ss,s]);
+    scheduleNotif({id:s.id,title:`Send ${s.via} to ${s.to}`,dueAt:s.sendAt},'reminder');
+    toast(`Message scheduled for ${fmtDue(s.sendAt)}`,'success');setModal(null);setSchedForm(bSched);
+  }
+  const delScheduled=(id)=>setScheduled(ss=>ss.filter(s=>s.id!==id));
+
+  function execScheduled(s){
+    const contact=s.contact||findContact(s.to);
+    if(s.via==='whatsapp'&&contact?.phone){
+      window.open(`https://wa.me/${contact.phone.replace(/\D/g,'')}?text=${encodeURIComponent(s.message)}`,'_blank');
+    }else if(s.via==='sms'&&contact?.phone){
+      window.location.href=`sms:${contact.phone}?body=${encodeURIComponent(s.message)}`;
+    }else if(s.via==='email'&&contact?.email){
+      window.location.href=`mailto:${contact.email}?body=${encodeURIComponent(s.message)}`;
+    }
+    setScheduled(ss=>ss.map(x=>x.id===s.id?{...x,sent:true}:x));
+    logAct(s.via,`Sent to ${s.to}`,s.message.slice(0,60));
+  }
+
+  const logAct=(type,title,detail)=>setHistory(h=>[{id:Date.now(),type,title,detail,ts:Date.now()},...h.slice(0,49)]);
+
+  /* ── EXECUTE ACTION ── */
+  function execAction(action){
+    const{type,contact,message,subject,body,query,result,translated,reminderData,eventData,noteData}=action;
+    if(type==='call'&&contact?.phone){window.location.href=`tel:${contact.phone}`;logAct('call',`Called ${contact.name}`,contact.phone);}
+    if(type==='whatsapp'&&contact?.phone){window.open(`https://wa.me/${contact.phone.replace(/\D/g,'')}?text=${encodeURIComponent(translated||message||'')}`, '_blank');logAct('whatsapp',`WhatsApp → ${contact.name}`,(translated||message||'').slice(0,80));}
+    if(type==='email'&&contact?.email){window.location.href=`mailto:${contact.email}?subject=${encodeURIComponent(subject||'')}&body=${encodeURIComponent(body||'')}`;logAct('email',`Email → ${contact.name}`,subject);}
+    if(type==='research')logAct('research',query,(result||'').slice(0,150));
+    if(type==='reminder'&&reminderData)addReminder(reminderData);
+    if(type==='calendar'&&eventData){addEvent(eventData);setTab('calendar');}
+    if(type==='note'&&noteData){addNote(noteData);setTab('notes');}
+    setActionModal(null);
+  }
+
+  /* ── IMAGE SCAN ── */
+  function handleImg(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=(ev)=>{setImgPreview(ev.target.result);setImgFile(f);};r.readAsDataURL(f);}
+
+  async function scanImg(){
+    if(!imgFile||(activeProvider==='anthropic'&&!anthropicKey)||(activeProvider==='gemini'&&!geminiKey)){toast('Please set up your API key first','error');return;}
+    setLoading(true);
+    try{
+      const b64=imgPreview.split(',')[1];
+      const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:anthropicModel,max_tokens:400,system:'Extract a reminder from this image. Return ONLY JSON: {title,note,category,priority,dueAt(ISO8601)}. No markdown.',messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:imgFile.type,data:b64}},{type:'text',text:'Extract reminder.'}]}]})});
+      const data=await res.json();
+      const p=JSON.parse((data.content?.[0]?.text||'{}').replace(/```json|```/g,'').trim());
+      setRForm({title:p.title||'',note:p.note||'',category:p.category||'other',priority:p.priority||'medium',dueAt:p.dueAt?new Date(p.dueAt).toISOString().slice(0,16):''});
+      setImgPreview(null);setImgFile(null);setModal('addReminder');
+      toast('Image scanned!','success');
+    }catch{toast('Scan failed','error');}
+    setLoading(false);
+  }
+
+  /* ── USAGE TRACKING ── */
+  function trackUsage(inputText,outputText){
+    const iTokens=estimateTokens(inputText);
+    const oTokens=estimateTokens(outputText);
+    setUsage(u=>({
+      totalInputTokens:u.totalInputTokens+iTokens,
+      totalOutputTokens:u.totalOutputTokens+oTokens,
+      totalCalls:u.totalCalls+1,
+      sessions:[...u.sessions.slice(-29),{ts:Date.now(),input:iTokens,output:oTokens,provider:activeProvider,model:activeProvider==='anthropic'?anthropicModel:geminiModel}]
+    }));
+  }
+
+  /* ── AI SEND ── */
+  async function send(override){
+    const msg=(override||input).trim();if(!msg)return;
+    const key=activeProvider==='anthropic'?anthropicKey:geminiKey;
+    if(!key){setModal('settings');toast('Please set up your API key first','error');return;}
+    setInput('');setLoading(true);
+    setMessages(m=>[...m,{role:'user',text:msg,ts:Date.now()}]);
+    const wantsEmoji=/emoji|add some fun|spice it up/i.test(msg);
+    const cList=contacts.map(c=>`${c.name}|phone:${c.phone}|email:${c.email}`).join('\n')||'None.';
+    const mList=memory.slice(-15).map(m=>m.fact).join('; ')||'None.';
+    const aRem=reminders.filter(r=>!r.done).slice(0,6).map(r=>`• ${r.title} (${fmtDue(r.dueAt)})`).join('\n')||'None.';
+    const uEvt=events.filter(e=>new Date(e.dateTime)>=new Date()).slice(0,4).map(e=>`• ${e.title} — ${fmtDate(e.dateTime)}`).join('\n')||'None.';
+    const uMail=emails.filter(e=>!e.read).map(e=>`• From ${e.fromName}: "${e.subject}"`).join('\n')||'None.';
+    const pendingSched=scheduled.filter(s=>!s.sent).map(s=>`• ${s.via} to ${s.to} at ${fmtDue(s.sendAt)}: "${s.message.slice(0,40)}"`).join('\n')||'None.';
+
+    const sysPrompt=`You are Ruth, a sharp warm personal assistant. Concise, natural. No emojis unless flag says true.
+Emojis: ${wantsEmoji}. Today: ${new Date().toLocaleString()}
+CONTACTS:\n${cList}
+MEMORY:\n${mList}
+ACTIVE REMINDERS:\n${aRem}
+UPCOMING EVENTS:\n${uEvt}
+UNREAD EMAILS:\n${uMail}
+SCHEDULED MESSAGES:\n${pendingSched}
+
+When taking action, reply naturally AND append:
+\`\`\`json
+{"type":"call|whatsapp|email|research|reminder|calendar|note|translate|schedule|none","contactName":"or null","message":"or null","subject":"or null","body":"or null","query":"or null","result":"3-5 sentence research answer or null","translated":"or null","targetLanguage":"or null","reminderData":{"title":"","note":"","category":"other","priority":"medium","dueAt":"ISO8601"} or null,"eventData":{"title":"","location":"","date":"YYYY-MM-DD","time":"HH:MM","note":""} or null,"noteData":{"title":"","body":"","type":"note|todo","todos":[]} or null}
+\`\`\`
+For reminders/events: parse natural time ('tomorrow 9am', 'in 2 hours') into ISO8601.
+No emojis in messages unless asked. Keep replies short.`;
+
+    const convo=messages.slice(-8).map(m=>({role:m.role,content:m.text}));
+    let full='',action=null,display='';
+
+    try{
+      if(activeProvider==='anthropic'){
+        const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:anthropicModel,max_tokens:1000,system:sysPrompt,messages:[...convo,{role:'user',content:msg}]})});
+        const data=await res.json();
+        if(data.error)throw new Error(data.error.message||'API error');
+        full=data.content?.[0]?.text||'Something went wrong.';
+      }else{
+        // Gemini
+        const geminiMessages=[{role:'user',parts:[{text:sysPrompt+'\n\nConversation so far:\n'+convo.map(m=>`${m.role}: ${m.content}`).join('\n')+'\n\nUser: '+msg}]}];
+        const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:geminiMessages,generationConfig:{maxOutputTokens:1000}})});
+        const data=await res.json();
+        if(data.error)throw new Error(data.error.message||'Gemini API error');
+        full=data.candidates?.[0]?.content?.parts?.[0]?.text||'Something went wrong.';
+      }
+
+      const jm=full.match(/```json\s*([\s\S]*?)```/);
+      if(jm){try{const p=JSON.parse(jm[1]);const contact=findContact(p.contactName);action={...p,contact};display=full.replace(/```json[\s\S]*?```/,'').trim();}catch{display=full;}}
+      else{display=full;}
+
+      trackUsage(sysPrompt+msg,full);
+      setMessages(m=>[...m,{role:'assistant',text:display,ts:Date.now(),action}]);
+      if(voiceMode)ruthSpeak(display);
+
+      if(action){
+        if(['call','whatsapp','email','translate'].includes(action.type)&&action.contact)setActionModal(action);
+        else if(action.type==='reminder'&&action.reminderData)addReminder(action.reminderData);
+        else if(action.type==='calendar'&&action.eventData){addEvent(action.eventData);setTab('calendar');}
+        else if(action.type==='note'&&action.noteData){addNote(action.noteData);setTab('notes');}
+        else if(action.type==='research')logAct('research',action.query||msg,(action.result||display).slice(0,150));
+      }
+      learnQuietly(msg,display);
+    }catch(err){
+      setMessages(m=>[...m,{role:'assistant',text:`Error: ${err.message}. Please check your API key in Settings.`,ts:Date.now()}]);
+    }
+    setLoading(false);
+  }
+
+  async function learnQuietly(userMsg,aiReply){
+    if(!anthropicKey&&!geminiKey)return;
+    try{
+      if(activeProvider==='anthropic'&&anthropicKey){
+        const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:120,system:'Extract memorable personal facts. Return ONLY JSON array like ["prefers morning calls"]. Return [] if nothing. No markdown.',messages:[{role:'user',content:`User: "${userMsg}"\nRuth: "${aiReply.slice(0,150)}"`}]})});
+        const data=await res.json();
+        const facts=JSON.parse((data.content?.[0]?.text||'[]').replace(/```json|```/g,'').trim());
+        if(facts.length>0)setMemory(m=>[...m,...facts.map(f=>({fact:f,ts:Date.now()}))].slice(-50));
+      }
+    }catch{}
+  }
+
+  async function genEmailReply(email,instruction){
+    const key=activeProvider==='anthropic'?anthropicKey:geminiKey;
+    if(!key){setModal('settings');return;}
+    setReplyLoading(true);
+    try{
+      const prompt=`Original from ${email.fromName}:\nSubject: ${email.subject}\n\n${email.body}\n\nInstruction: ${instruction||'Write a professional reply'}\n\nWrite reply body only. No emojis. Sign off "Best regards\n[Your Name]".`;
+      if(activeProvider==='anthropic'){
+        const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:anthropicModel,max_tokens:400,system:'You are Ruth writing email replies. Professional, warm, concise.',messages:[{role:'user',content:prompt}]})});
+        const data=await res.json();setEmailReply(data.content?.[0]?.text||'');
+      }else{
+        const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}]})});
+        const data=await res.json();setEmailReply(data.candidates?.[0]?.content?.parts?.[0]?.text||'');
+      }
+    }catch{toast('Could not generate reply','error');}
+    setReplyLoading(false);
+  }
+
+  async function reqNotif(){
+    if(typeof Notification==='undefined'){toast('Try Chrome for notifications','info');return;}
+    try{const p=await Notification.requestPermission();setNotifPerm(p);if(p==='granted')toast('Notifications enabled!','success');else toast('Notifications blocked','info');}catch{}
+  }
+
+  const handleKey=(e)=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}};
+
+  /* ── COMPUTED ── */
+  const activeCnt=reminders.filter(r=>!r.done).length;
+  const unreadCnt=emails.filter(e=>!e.read).length;
+  const overdueCnt=reminders.filter(r=>!r.done&&new Date(r.dueAt)<new Date()).length;
+  const pendingSchedCnt=scheduled.filter(s=>!s.sent).length;
+  const filtEmails=emails.filter(e=>emailFilter==='gmail'?e.provider==='gmail':emailFilter==='outlook'?e.provider==='outlook':emailFilter==='unread'?!e.read:true).filter(e=>!emailSearch||e.subject.toLowerCase().includes(emailSearch.toLowerCase())||e.fromName.toLowerCase().includes(emailSearch.toLowerCase())).sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  /* ── USAGE STATS ── */
+  const curModel=activeProvider==='anthropic'?anthropicModel:geminiModel;
+  const costs=MODEL_COSTS[curModel]||{input:3,output:15,name:curModel};
+  const totalCostUSD=((usage.totalInputTokens/1000000)*costs.input+(usage.totalOutputTokens/1000000)*costs.output);
+  const budgetPct=Math.min(100,(totalCostUSD/5)*100); // out of $5
+
+  /* ═══════════════════════════════════════════════════════════════════════ */
+  /*  RENDER                                                                 */
+  /* ═══════════════════════════════════════════════════════════════════════ */
+  const apiReady=(activeProvider==='anthropic'&&anthropicKey)||(activeProvider==='gemini'&&geminiKey);
+
+  return h('div',{style:{fontFamily:"'Inter',sans-serif",background:BG,height:'100%',maxWidth:430,margin:'0 auto',display:'flex',flexDirection:'column',position:'relative'}},
+
+    /* ── In-app notification banner ── */
+    inAppNotif&&h('div',{className:'slideDown',style:{position:'fixed',top:0,left:'50%',transform:'translateX(-50%)',width:'100%',maxWidth:430,zIndex:100,padding:'12px 16px 0'}},
+      h('div',{style:{background:inAppNotif.type==='calendar'?'#5856d6':ROSE,borderRadius:16,padding:'12px 16px',display:'flex',alignItems:'center',gap:10,boxShadow:'0 8px 24px rgba(0,0,0,0.18)'}},
+        h('div',{style:{fontSize:22}},inAppNotif.type==='calendar'?'📅':'🔔'),
+        h('div',{style:{flex:1}},
+          h('div',{style:{fontWeight:700,fontSize:13,color:'#fff'}},inAppNotif.title),
+          h('div',{style:{fontSize:11,color:'rgba(255,255,255,0.8)',marginTop:1}},inAppNotif.body)
+        ),
+        h('button',{onClick:()=>setInAppNotif(null),style:{background:'rgba(255,255,255,0.25)',border:'none',borderRadius:8,padding:'4px 10px',fontSize:11,color:'#fff',fontWeight:700,cursor:'pointer'}},'✕')
+      )
+    ),
+
+    /* ── STATUS BAR ── */
+    h('div',{style:{background:SURFACE,borderBottom:`1px solid ${GRAY3}`,padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:0,zIndex:10}},
+      /* Avatar + name */
+      h('div',{style:{display:'flex',alignItems:'center',gap:10}},
+        h('div',{style:{width:36,height:36,borderRadius:'50%',background:`linear-gradient(135deg,${ROSE},${ROSE_D})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,position:'relative',flexShrink:0,boxShadow:`0 2px 8px ${ROSE}40`}},
+          '👩',
+          h('div',{style:{position:'absolute',bottom:1,right:1,width:10,height:10,borderRadius:'50%',background:speaking?'#5856d6':listening?ROSE:GREEN,border:'2px solid #fff',transition:'background 0.3s'}})
+        ),
+        h('div',null,
+          h('div',{style:{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:17,color:DARK,letterSpacing:-0.3}},'Ruth'),
+          h('div',{style:{fontSize:10,fontWeight:600,color:speaking?'#5856d6':listening?ROSE:GREEN,letterSpacing:0.5}},speaking?'Speaking…':listening?'Listening…':'Ready')
+        )
+      ),
+      /* Right controls */
+      h('div',{style:{display:'flex',alignItems:'center',gap:6}},
+        overdueCnt>0&&h('div',{style:{background:RED,borderRadius:8,padding:'3px 7px',fontSize:10,fontWeight:700,color:'#fff'}},`⚠️ ${overdueCnt}`),
+        pendingSchedCnt>0&&h('div',{style:{background:AMBER,borderRadius:8,padding:'3px 7px',fontSize:10,fontWeight:700,color:'#fff'}},`📆 ${pendingSchedCnt}`),
+        /* Voice toggle */
+        h('button',{onClick:()=>{setVoiceMode(v=>!v);if(speaking)stopSpeak();},className:'btn-icon',style:{width:34,height:34,color:voiceMode?ROSE:GRAY,fontSize:16}},voiceMode?'🔊':'🔇'),
+        /* Gear settings */
+        h('button',{onClick:()=>setModal('settings'),className:'btn-icon',style:{width:34,height:34,fontSize:16,color:GRAY}},
+          h('svg',{width:20,height:20,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round'},
+            h('circle',{cx:12,cy:12,r:3}),
+            h('path',{d:'M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z'})
+          )
+        )
+      )
+    ),
+
+    /* ── MAIN CONTENT ── */
+    h('div',{style:{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',minHeight:0}},
+
+      /* ══ CHAT ══ */
+      tab==='chat'&&h(React.Fragment,null,
+        h('div',{style:{flex:1,overflowY:'auto',padding:'12px 12px 80px'}},
+          /* Quick action chips */
+          h('div',{style:{display:'flex',gap:6,marginBottom:14,flexWrap:'wrap'}},
+            [['📞','Call Mom'],['💬','WhatsApp John'],['🔍','Research'],['🔔','Set reminder'],['📆','Schedule message'],['🌍','Translate']].map(([icon,cmd])=>
+              h('button',{key:cmd,onClick:()=>{setInput(cmd);inputRef.current?.focus();},style:{background:SURFACE,border:`1.5px solid ${GRAY3}`,borderRadius:20,padding:'6px 12px',fontSize:12,fontWeight:500,color:GRAY,cursor:'pointer',whiteSpace:'nowrap'}},`${icon} ${cmd}`)
+            )
+          ),
+          /* Messages */
+          messages.map((m,i)=>
+            h('div',{key:i,className:'msg',style:{marginBottom:10,display:'flex',flexDirection:'column',alignItems:m.role==='user'?'flex-end':'flex-start'}},
+              m.role==='assistant'&&h('div',{style:{display:'flex',alignItems:'center',gap:5,marginBottom:4}},
+                h('div',{style:{width:22,height:22,borderRadius:'50%',background:`linear-gradient(135deg,${ROSE},${ROSE_D})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11}},'👩'),
+                h('span',{style:{fontSize:11,color:GRAY,fontWeight:500}},`Ruth · ${timeAgo(m.ts)}`)
+              ),
+              h('div',{style:{maxWidth:'82%',background:m.role==='user'?`linear-gradient(135deg,${ROSE},${ROSE_D})`:'#fff',color:m.role==='user'?'#fff':DARK,borderRadius:m.role==='user'?'18px 18px 4px 18px':'4px 18px 18px 18px',padding:'11px 14px',fontSize:14,lineHeight:1.6,boxShadow:m.role==='user'?`0 2px 12px ${ROSE}30`:'0 1px 4px rgba(0,0,0,0.08)',border:m.role==='user'?'none':`1px solid ${GRAY3}`,whiteSpace:'pre-wrap',fontWeight:400}},m.text),
+              m.action&&m.action.contact&&['call','whatsapp','email','translate'].includes(m.action.type)&&
+                h('button',{onClick:()=>setActionModal(m.action),style:{marginTop:6,background:AMETA[m.action.type]?.bg,color:AMETA[m.action.type]?.color,border:`1.5px solid ${AMETA[m.action.type]?.color}30`,borderRadius:20,padding:'7px 14px',fontSize:12,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:5}},
+                  `${AMETA[m.action.type]?.icon} Tap to ${AMETA[m.action.type]?.label} ${m.action.contact.name}`
+                ),
+              m.role==='user'&&h('div',{style:{fontSize:10,color:GRAY,marginTop:3}},timeAgo(m.ts))
+            )
+          ),
+          loading&&h('div',{className:'msg',style:{display:'flex',alignItems:'center',gap:6,marginBottom:10}},
+            h('div',{style:{width:22,height:22,borderRadius:'50%',background:`linear-gradient(135deg,${ROSE},${ROSE_D})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11}},'👩'),
+            h('div',{style:{background:'#fff',borderRadius:'4px 18px 18px 18px',padding:'12px 16px',display:'flex',gap:4,alignItems:'flex-end',height:44,border:`1px solid ${GRAY3}`,boxShadow:'0 1px 4px rgba(0,0,0,0.06)'}},
+              [0,1,2].map(i=>h('div',{key:i,className:'bar',style:{width:4,height:18,borderRadius:3,background:ROSE,animationDelay:`${i*0.17}s`}}))
+            )
+          ),
+          h('div',{ref:bottomRef})
+        ),
+        /* Chat input */
+        h('div',{style:{position:'fixed',bottom:60,left:'50%',transform:'translateX(-50%)',width:'100%',maxWidth:430,background:SURFACE,borderTop:`1px solid ${GRAY3}`,padding:'8px 12px',zIndex:9}},
+          imgPreview&&h('div',{style:{display:'flex',alignItems:'center',gap:8,background:GRAY2,borderRadius:12,padding:'8px 12px',marginBottom:8}},
+            h('img',{src:imgPreview,style:{width:36,height:36,objectFit:'cover',borderRadius:8},alt:''}),
+            h('span',{style:{flex:1,fontSize:12,color:GRAY}},'Image ready to scan'),
+            h('button',{onClick:scanImg,disabled:loading,style:{background:ROSE,border:'none',borderRadius:8,padding:'6px 12px',fontSize:12,fontWeight:700,color:'#fff',cursor:'pointer'}},'Scan'),
+            h('button',{onClick:()=>{setImgPreview(null);setImgFile(null);},style:{background:'none',border:'none',color:GRAY,fontSize:16,cursor:'pointer'}},'✕')
+          ),
+          listening&&h('div',{style:{background:ROSE_BG,borderRadius:10,padding:'6px 12px',marginBottom:8,fontSize:12,color:ROSE,display:'flex',alignItems:'center',gap:6}},
+            h('span',{style:{width:6,height:6,borderRadius:'50%',background:ROSE,display:'inline-block',animation:'blink 1s infinite'}}),
+            liveText?`"${liveText}"`:'Listening…'
+          ),
+          speaking&&h('div',{style:{background:'#f0f5ff',borderRadius:10,padding:'6px 12px',marginBottom:8,fontSize:12,color:BLUE,display:'flex',alignItems:'center',justifyContent:'space-between'}},
+            'Ruth is speaking…',
+            h('button',{onClick:stopSpeak,style:{background:'none',border:'none',color:BLUE,fontWeight:700,cursor:'pointer',fontSize:11}},'Stop')
+          ),
+          h('input',{ref:fileRef,type:'file',accept:'image/*',capture:'environment',onChange:handleImg,style:{display:'none'}}),
+          h('div',{style:{display:'flex',gap:6,alignItems:'flex-end'}},
+            h('button',{onClick:()=>fileRef.current.click(),className:'btn-icon',style:{width:38,height:38,borderRadius:12,background:GRAY2,border:`1.5px solid ${GRAY3}`,fontSize:16,flexShrink:0}},'📷'),
+            h('textarea',{ref:inputRef,value:input,onChange:e=>setInput(e.target.value),onKeyDown:handleKey,placeholder:'Message Ruth…',rows:1,style:{flex:1,background:GRAY2,border:`1.5px solid ${GRAY3}`,borderRadius:14,padding:'10px 12px',fontSize:14,color:DARK,resize:'none',outline:'none',maxHeight:90,lineHeight:1.5,fontFamily:"'Inter',sans-serif"}}),
+            h('button',{onClick:listening?stopListen:startListen,style:{width:38,height:38,borderRadius:'50%',background:listening?ROSE:GRAY2,border:`1.5px solid ${listening?ROSE:GRAY3}`,fontSize:16,flexShrink:0,cursor:'pointer',transition:'all 0.2s',display:'flex',alignItems:'center',justifyContent:'center'}},listening?'⏹':'🎤'),
+            h('button',{onClick:()=>send(),disabled:loading||!input.trim(),style:{width:38,height:38,borderRadius:'50%',background:input.trim()?`linear-gradient(135deg,${ROSE},${ROSE_D})`:GRAY3,border:'none',color:'#fff',fontSize:17,flexShrink:0,cursor:'pointer',transition:'all 0.2s',display:'flex',alignItems:'center',justifyContent:'center'}},'↑')
+          )
+        )
+      ),
+
+      /* ══ EMAIL ══ */
+      tab==='email'&&h('div',{style:{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',paddingBottom:60}},
+        selEmail?
+          h('div',{className:'msg',style:{padding:'12px 14px',overflowY:'auto'}},
+            h('button',{onClick:()=>{setSelEmail(null);setEmailReply('');},style:{background:GRAY2,border:`1.5px solid ${GRAY3}`,borderRadius:10,padding:'7px 14px',fontSize:13,color:DARK,fontWeight:500,cursor:'pointer',marginBottom:14}},'← Back'),
+            h('div',{className:'card',style:{padding:16,marginBottom:12}},
+              h('div',{style:{display:'flex',alignItems:'center',gap:10,marginBottom:10}},
+                h('div',{style:{width:40,height:40,borderRadius:'50%',background:selEmail.provider==='gmail'?'#fce8e6':'#e8f0fe',display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,fontWeight:800,color:selEmail.provider==='gmail'?'#ea4335':'#0078d4',flexShrink:0}},selEmail.fromName[0]),
+                h('div',{style:{flex:1}},
+                  h('div',{style:{fontWeight:700,fontSize:14,color:DARK}},selEmail.fromName),
+                  h('div',{style:{fontSize:11,color:GRAY}},`${selEmail.from} · ${timeAgo(new Date(selEmail.date).getTime())} ago`)
+                )
+              ),
+              h('div',{style:{fontWeight:700,fontSize:15,color:DARK,marginBottom:8}},selEmail.subject),
+              h('div',{style:{fontSize:13,color:GRAY,lineHeight:1.7}},selEmail.body)
+            ),
+            h('div',{className:'card',style:{padding:14}},
+              h('div',{style:{fontSize:11,fontWeight:600,color:GRAY,textTransform:'uppercase',letterSpacing:0.8,marginBottom:10}},'Reply'),
+              emailReply?h(React.Fragment,null,
+                h('textarea',{value:emailReply,onChange:e=>setEmailReply(e.target.value),rows:6,className:'inp',style:{resize:'none',marginBottom:10,lineHeight:1.6}}),
+                h('div',{style:{display:'flex',gap:8}},
+                  h('button',{onClick:()=>setEmailReply(''),className:'btn-secondary',style:{flex:1}},'Clear'),
+                  h('button',{onClick:()=>{window.location.href=`mailto:${selEmail.from}?subject=Re: ${encodeURIComponent(selEmail.subject)}&body=${encodeURIComponent(emailReply)}`;setEmails(es=>es.map(e=>e.id===selEmail.id?{...e,read:true}:e));toast('Email app opened!','success');},style:{flex:2,background:selEmail.provider==='gmail'?'#ea4335':'#0078d4',color:'#fff',border:'none',borderRadius:12,padding:'11px 0',fontSize:14,fontWeight:700,cursor:'pointer'}},'Open & Send →')
+                ),
+                h('div',{style:{fontSize:11,color:GRAY,textAlign:'center',marginTop:8}},'Opens your email app — tap Send once')
+              ):h('div',{style:{display:'flex',flexDirection:'column',gap:7}},
+                [['Professional reply','Write a professional reply'],['Quick acknowledgment','Acknowledge and say I\'ll follow up'],['Request more time','Ask for more time to respond'],['Decline politely','Decline this politely']].map(([label,instr])=>
+                  h('button',{key:label,onClick:()=>genEmailReply(selEmail,instr),disabled:replyLoading,className:'btn-secondary',style:{textAlign:'left',padding:'11px 14px'}},replyLoading?'Generating reply…':label)
+                )
+              )
+            )
+          ):
+          h('div',{style:{flex:1,overflowY:'auto',padding:'12px 14px'}},
+            (!gmailOn||!outlookOn)&&h('div',{style:{marginBottom:12}},
+              h('div',{style:{fontSize:11,fontWeight:600,color:GRAY,textTransform:'uppercase',letterSpacing:0.8,marginBottom:8}},'Connect Inbox'),
+              h('div',{style:{display:'flex',gap:8}},
+                !gmailOn&&h('button',{onClick:()=>{setGmailOn(true);setEmails(e=>[...DEMO_EMAILS.filter(x=>x.provider==='gmail'),...e.filter(x=>x.provider!=='gmail')]);toast('Gmail connected','success');},style:{flex:1,background:'#fce8e6',border:'1.5px solid #ea433530',borderRadius:12,padding:'11px 0',fontSize:13,fontWeight:700,color:'#ea4335',cursor:'pointer'}},'G  Gmail'),
+                !outlookOn&&h('button',{onClick:()=>{setOutlookOn(true);setEmails(e=>[...e.filter(x=>x.provider!=='outlook'),...DEMO_EMAILS.filter(x=>x.provider==='outlook')]);toast('Outlook connected','success');},style:{flex:1,background:'#e8f0fe',border:'1.5px solid #0078d430',borderRadius:12,padding:'11px 0',fontSize:13,fontWeight:700,color:'#0078d4',cursor:'pointer'}},'⬡  Outlook')
+              )
+            ),
+            h('input',{value:emailSearch,onChange:e=>setEmailSearch(e.target.value),placeholder:'Search emails…',className:'inp',style:{marginBottom:10}}),
+            h('div',{style:{display:'flex',gap:5,marginBottom:12,overflowX:'auto'}},
+              ['all','unread','gmail','outlook'].map(f=>
+                h('button',{key:f,onClick:()=>setEmailFilter(f),className:'pill',style:{background:emailFilter===f?ROSE:'#fff',color:emailFilter===f?'#fff':GRAY,borderColor:emailFilter===f?ROSE:GRAY3}},
+                  f==='all'?`All ${emails.length}`:f==='unread'?`Unread ${unreadCnt}`:f==='gmail'?`Gmail ${emails.filter(e=>e.provider==='gmail').length}`:`Outlook ${emails.filter(e=>e.provider==='outlook').length}`
+                )
+              )
+            ),
+            filtEmails.length===0&&h('div',{style:{textAlign:'center',padding:'40px 0',color:GRAY,fontSize:14}},h('div',{style:{fontSize:40,marginBottom:8}},'📧'),'Connect Gmail or Outlook above'),
+            filtEmails.map(e=>
+              h('div',{key:e.id,onClick:()=>{setSelEmail(e);setEmails(es=>es.map(x=>x.id===e.id?{...x,read:true}:x));},className:'card',style:{padding:'12px 14px',marginBottom:8,cursor:'pointer',borderLeft:!e.read?`3px solid ${ROSE}`:undefined}},
+                h('div',{style:{display:'flex',alignItems:'center',gap:10}},
+                  h('div',{style:{width:36,height:36,borderRadius:'50%',background:e.provider==='gmail'?'#fce8e6':'#e8f0fe',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:e.provider==='gmail'?'#ea4335':'#0078d4',flexShrink:0}},e.fromName[0]),
+                  h('div',{style:{flex:1,minWidth:0}},
+                    h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:2}},
+                      h('div',{style:{fontWeight:e.read?400:700,fontSize:13,color:DARK,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}},e.fromName),
+                      h('div',{style:{fontSize:10,color:GRAY,flexShrink:0,marginLeft:6}},timeAgo(new Date(e.date).getTime()))
+                    ),
+                    h('div',{style:{fontSize:12,fontWeight:e.read?400:600,color:e.read?GRAY:DARK,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginBottom:2}},e.subject),
+                    h('div',{style:{fontSize:11,color:GRAY,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}},e.body.slice(0,60)+'…')
+                  )
+                )
+              )
+            )
+          )
+      ),
+
+      /* ══ REMINDERS ══ */
+      tab==='reminders'&&h('div',{style:{flex:1,overflowY:'auto',padding:'12px 14px 80px'}},
+        h('div',{style:{display:'flex',gap:6,marginBottom:12,alignItems:'center'}},
+          h('div',{className:'segment',style:{flex:1}},
+            ['active','done','all'].map(f=>h('button',{key:f,onClick:()=>setRemFilter(f),className:`seg-btn${remFilter===f?' active':''}`,style:{}},f.charAt(0).toUpperCase()+f.slice(1)))
+          ),
+          h('button',{onClick:()=>{setSchedForm(bSched);setModal('addScheduled');},style:{background:'#fff8f0',border:`1.5px solid ${AMBER}30`,borderRadius:12,padding:'8px 10px',fontSize:14,cursor:'pointer'},title:'Schedule message'},'📆'),
+          h('button',{onClick:()=>{setRForm(bRem);setModal('addReminder');},style:{background:`linear-gradient(135deg,${ROSE},${ROSE_D})`,border:'none',borderRadius:12,padding:'8px 14px',fontSize:13,fontWeight:700,color:'#fff',cursor:'pointer'}},'+ Add')
+        ),
+        /* Scan button */
+        h('button',{onClick:()=>fileRef.current&&fileRef.current.click(),style:{width:'100%',background:'#fff',border:`1.5px dashed ${GRAY3}`,borderRadius:12,padding:'10px 0',fontSize:13,color:GRAY,marginBottom:12,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6}},'📷 Scan image to create reminder'),
+        /* Scheduled messages section */
+        scheduled.filter(s=>!s.sent).length>0&&h('div',{style:{marginBottom:14}},
+          h('div',{style:{fontSize:11,fontWeight:600,color:AMBER,textTransform:'uppercase',letterSpacing:0.8,marginBottom:7}},'📆 Scheduled Messages'),
+          scheduled.filter(s=>!s.sent).map(s=>
+            h('div',{key:s.id,className:'card',style:{padding:'11px 13px',marginBottom:7,borderLeft:`3px solid ${AMBER}`}},
+              h('div',{style:{display:'flex',alignItems:'flex-start',gap:10}},
+                h('div',{style:{flex:1}},
+                  h('div',{style:{fontWeight:600,fontSize:13,color:DARK,marginBottom:2}},`${s.via==='whatsapp'?'💬':'✉️'} ${s.to}`),
+                  h('div',{style:{fontSize:12,color:GRAY,marginBottom:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}},s.message),
+                  h('div',{style:{fontSize:11,color:AMBER,fontWeight:500}},`Scheduled: ${fmtDue(s.sendAt)}`)
+                ),
+                h('div',{style:{display:'flex',gap:5}},
+                  h('button',{onClick:()=>execScheduled(s),style:{background:'#f0fdf5',border:`1px solid ${GREEN}30`,borderRadius:8,padding:'5px 8px',fontSize:11,color:GREEN,fontWeight:700,cursor:'pointer'}},'Send Now'),
+                  h('button',{onClick:()=>delScheduled(s.id),style:{background:'none',border:'none',color:GRAY,fontSize:13,cursor:'pointer'}},'✕')
+                )
+              )
+            )
+          )
+        ),
+        /* Reminder list */
+        reminders.filter(r=>remFilter==='active'?!r.done:remFilter==='done'?r.done:true).sort((a,b)=>new Date(a.dueAt)-new Date(b.dueAt)).map(r=>{
+          const ov=!r.done&&new Date(r.dueAt)<new Date();
+          return h('div',{key:r.id,className:'card msg',style:{padding:'12px 13px',marginBottom:8,borderLeft:ov?`3px solid ${RED}`:r.priority==='high'?`3px solid ${ROSE}`:undefined}},
+            h('div',{style:{display:'flex',alignItems:'flex-start',gap:10}},
+              h('button',{onClick:()=>toggleRem(r.id),style:{marginTop:1,width:22,height:22,borderRadius:6,border:`2px solid ${r.done?GREEN:GRAY3}`,background:r.done?GREEN:'transparent',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,color:'#fff',cursor:'pointer',transition:'all 0.2s'}},r.done?'✓':''),
+              h('div',{style:{flex:1,minWidth:0}},
+                h('div',{style:{display:'flex',alignItems:'center',gap:6,marginBottom:3}},
+                  h('span',{style:{fontSize:14,fontWeight:600,color:r.done?GRAY:DARK,textDecoration:r.done?'line-through':'none',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}},r.title),
+                  h('div',{style:{width:7,height:7,borderRadius:'50%',background:r.priority==='high'?RED:r.priority==='medium'?AMBER:GREEN,flexShrink:0}})
+                ),
+                r.note&&h('div',{style:{fontSize:12,color:GRAY,marginBottom:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}},r.note),
+                h('div',{style:{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}},
+                  h('span',{style:{fontSize:11,color:GRAY}},`${CATS[r.category]} ${r.category}`),
+                  h('span',{style:{fontSize:11,fontWeight:600,color:ov?RED:GRAY,background:ov?'#fff0ef':'#f5f5f7',borderRadius:6,padding:'2px 6px'}},ov?`⚠ Overdue`:timeUntil(r.dueAt)),
+                  h('span',{style:{fontSize:11,color:GRAY}},fmtDue(r.dueAt))
+                )
+              ),
+              h('button',{onClick:()=>delRem(r.id),style:{background:'none',border:'none',color:GRAY,fontSize:14,cursor:'pointer',flexShrink:0,padding:'0 2px'}},'✕')
+            )
+          );
+        }),
+        reminders.filter(r=>remFilter==='active'?!r.done:remFilter==='done'?r.done:true).length===0&&h('div',{style:{textAlign:'center',padding:'40px 0',color:GRAY,fontSize:14}},h('div',{style:{fontSize:36,marginBottom:8}},'🌙'),remFilter==='active'?'You\'re all caught up!':'Nothing here.')
+      ),
+
+      /* ══ CALENDAR ══ */
+      tab==='calendar'&&h('div',{style:{flex:1,overflowY:'auto',padding:'12px 14px 80px'}},
+        h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}},
+          h('div',{style:{fontWeight:700,fontSize:16,color:DARK}},'Upcoming Events'),
+          h('button',{onClick:()=>{setEForm(bEvt);setModal('addEvent');},style:{background:`linear-gradient(135deg,#5856d6,#3634a3)`,border:'none',borderRadius:12,padding:'8px 14px',fontSize:13,fontWeight:700,color:'#fff',cursor:'pointer'}},'+ Add')
+        ),
+        events.filter(e=>new Date(e.dateTime)>=new Date()).length===0&&h('div',{style:{textAlign:'center',padding:'40px 0',color:GRAY,fontSize:14}},h('div',{style:{fontSize:36,marginBottom:8}},'📅'),'No upcoming events'),
+        events.filter(e=>new Date(e.dateTime)>=new Date()).map(e=>
+          h('div',{key:e.id,className:'card msg',style:{padding:'12px 14px',marginBottom:8,display:'flex',gap:12,alignItems:'flex-start'}},
+            h('div',{style:{width:44,flexShrink:0,textAlign:'center',background:'#f5f5ff',borderRadius:10,padding:'6px 0'}},
+              h('div',{style:{fontSize:9,fontWeight:700,color:'#5856d6',textTransform:'uppercase',letterSpacing:0.5}},new Date(e.dateTime).toLocaleString('en-US',{month:'short'})),
+              h('div',{style:{fontSize:22,fontWeight:900,color:DARK,lineHeight:1}},new Date(e.dateTime).getDate()),
+              e.time&&h('div',{style:{fontSize:9,color:GRAY}},e.time)
+            ),
+            h('div',{style:{flex:1,minWidth:0}},
+              h('div',{style:{fontWeight:700,fontSize:14,color:DARK,marginBottom:3}},e.title),
+              e.location&&h('div',{style:{fontSize:12,color:GRAY,marginBottom:2}},`📍 ${e.location}`),
+              e.note&&h('div',{style:{fontSize:12,color:GRAY}},e.note)
+            ),
+            h('button',{onClick:()=>delEvent(e.id),style:{background:'none',border:'none',color:GRAY,fontSize:14,cursor:'pointer'}},'✕')
+          )
+        )
+      ),
+
+      /* ══ NOTES ══ */
+      tab==='notes'&&h('div',{style:{flex:1,overflowY:'auto',padding:'12px 14px 80px'}},
+        h('div',{style:{display:'flex',gap:6,marginBottom:12,alignItems:'center'}},
+          h('div',{className:'segment',style:{flex:1}},
+            [['all','All'],['note','Notes'],['todo','To-Do']].map(([f,label])=>h('button',{key:f,onClick:()=>setNoteFilter(f),className:`seg-btn${noteFilter===f?' active':''}`},label))
+          ),
+          h('button',{onClick:()=>{setNForm(bNote);setModal('addNote');},style:{background:`linear-gradient(135deg,${AMBER},#e07020)`,border:'none',borderRadius:12,padding:'8px 14px',fontSize:13,fontWeight:700,color:'#fff',cursor:'pointer'}},'+ Add')
+        ),
+        notes.filter(n=>noteFilter==='all'||n.type===noteFilter).map(n=>
+          h('div',{key:n.id,className:'card msg',style:{padding:'12px 14px',marginBottom:8,borderLeft:n.type==='todo'?`3px solid ${AMBER}`:undefined}},
+            h('div',{style:{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:6}},
+              h('div',null,
+                h('div',{style:{fontWeight:700,fontSize:14,color:DARK}},n.title),
+                h('div',{style:{fontSize:10,color:n.type==='todo'?AMBER:GRAY,textTransform:'uppercase',letterSpacing:0.8,fontWeight:600,marginTop:2}},`${n.type==='todo'?'To-Do':'Note'} · ${timeAgo(n.ts)} ago`)
+              ),
+              h('button',{onClick:()=>delNote(n.id),style:{background:'none',border:'none',color:GRAY,fontSize:14,cursor:'pointer'}},'✕')
+            ),
+            n.body&&h('div',{style:{fontSize:13,color:GRAY,lineHeight:1.6,marginBottom:n.todos?.length?8:0,whiteSpace:'pre-wrap'}},n.body),
+            n.todos?.map(t=>
+              h('div',{key:t.id,style:{display:'flex',alignItems:'center',gap:9,marginBottom:6}},
+                h('button',{onClick:()=>toggleTodo(n.id,t.id),style:{width:20,height:20,borderRadius:6,border:`2px solid ${t.done?GREEN:GRAY3}`,background:t.done?GREEN:'transparent',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:'#fff',cursor:'pointer',transition:'all 0.2s'}},t.done?'✓':''),
+                h('span',{style:{fontSize:13,color:t.done?GRAY:DARK,textDecoration:t.done?'line-through':'none'}},t.text)
+              )
+            )
+          )
+        ),
+        notes.filter(n=>noteFilter==='all'||n.type===noteFilter).length===0&&h('div',{style:{textAlign:'center',padding:'40px 0',color:GRAY,fontSize:14}},h('div',{style:{fontSize:36,marginBottom:8}},'📝'),'No notes yet — ask Ruth or tap + Add')
+      )
+    ),
+
+    /* ── BOTTOM TAB BAR ── */
+    h('div',{style:{position:'fixed',bottom:0,left:'50%',transform:'translateX(-50%)',width:'100%',maxWidth:430,background:SURFACE,borderTop:`1px solid ${GRAY3}`,display:'flex',zIndex:10,paddingBottom:'env(safe-area-inset-bottom)'}},
+      TABS.map(t=>{
+        const badge=t.id==='reminders'&&activeCnt>0?activeCnt:t.id==='email'&&unreadCnt>0?unreadCnt:0;
+        return h('button',{key:t.id,onClick:()=>setTab(t.id),style:{flex:1,padding:'10px 0 8px',background:'transparent',border:'none',cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:2,position:'relative',transition:'all 0.15s'}},
+          h('div',{style:{fontSize:20,transition:'transform 0.2s',transform:tab===t.id?'scale(1.1)':'scale(1)'}},t.icon),
+          h('div',{style:{fontSize:9,fontWeight:tab===t.id?700:400,color:tab===t.id?ROSE:GRAY,letterSpacing:0.3}},t.label),
+          badge>0&&h('div',{style:{position:'absolute',top:6,right:'22%',width:15,height:15,borderRadius:'50%',background:ROSE,fontSize:8,fontWeight:800,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center'}},badge>9?'9+':badge),
+          tab===t.id&&h('div',{style:{width:4,height:4,borderRadius:'50%',background:ROSE,marginTop:1}})
+        );
+      })
+    ),
+
+    /* ═══════════ MODALS ═══════════ */
+
+    /* Action confirm */
+    actionModal&&h('div',{style:{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:50,display:'flex',alignItems:'flex-end'},onClick:()=>setActionModal(null)},
+      h('div',{className:'slide',style:{background:SURFACE,borderRadius:'20px 20px 0 0',padding:'20px 20px 32px',width:'100%',maxWidth:430,margin:'0 auto'},onClick:e=>e.stopPropagation()},
+        h('div',{style:{width:36,height:4,borderRadius:2,background:GRAY3,margin:'0 auto 16px'}}),
+        (()=>{
+          const meta=AMETA[actionModal.type]||AMETA.call;
+          return h(React.Fragment,null,
+            h('div',{style:{display:'flex',alignItems:'center',gap:12,marginBottom:14}},
+              h('div',{style:{width:48,height:48,borderRadius:14,background:meta.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22}},meta.icon),
+              h('div',null,
+                h('div',{style:{fontWeight:700,fontSize:16,color:DARK}},`${meta.label} ${actionModal.contact?.name}`),
+                h('div',{style:{fontSize:12,color:GRAY}},actionModal.type==='email'?actionModal.contact?.email:actionModal.contact?.phone)
+              )
+            ),
+            actionModal.translated&&h('div',{style:{background:'#f0f5ff',borderRadius:12,padding:'10px 13px',marginBottom:12,border:`1px solid ${BLUE}20`}},
+              h('div',{style:{fontSize:10,color:BLUE,fontWeight:600,textTransform:'uppercase',letterSpacing:0.8,marginBottom:4}},`Translated (${actionModal.targetLanguage})`),
+              h('div',{style:{fontSize:13,color:DARK,lineHeight:1.6}},actionModal.translated)
+            ),
+            actionModal.message&&!actionModal.translated&&h('div',{style:{background:GRAY2,borderRadius:12,padding:'10px 13px',marginBottom:12,border:`1px solid ${GRAY3}`}},
+              h('div',{style:{fontSize:10,color:GRAY,fontWeight:600,textTransform:'uppercase',letterSpacing:0.8,marginBottom:4}},'Message'),
+              h('div',{style:{fontSize:13,color:DARK,lineHeight:1.6}},actionModal.message)
+            ),
+            actionModal.subject&&h('div',{style:{background:GRAY2,borderRadius:12,padding:'10px 13px',marginBottom:12,border:`1px solid ${GRAY3}`}},
+              h('div',{style:{fontSize:10,color:GRAY,fontWeight:600,textTransform:'uppercase',letterSpacing:0.8,marginBottom:3}},'Subject'),
+              h('div',{style:{fontWeight:700,color:DARK,fontSize:13,marginBottom:4}},actionModal.subject),
+              actionModal.body&&h('div',{style:{color:GRAY,fontSize:12,lineHeight:1.5}},actionModal.body.slice(0,160)+'…')
+            ),
+            h('div',{style:{display:'flex',gap:8,marginBottom:8}},
+              h('button',{onClick:()=>setActionModal(null),className:'btn-secondary',style:{flex:1}},'Cancel'),
+              h('button',{onClick:()=>execAction(actionModal),style:{flex:2,background:meta.color,border:'none',borderRadius:14,padding:'13px 0',fontSize:14,fontWeight:700,color:'#fff',cursor:'pointer'}},`${meta.icon} Open & ${meta.label}`)
+            ),
+            h('div',{style:{textAlign:'center',fontSize:11,color:GRAY}},`Opens ${actionModal.type==='call'?'your dialer':actionModal.type==='whatsapp'?'WhatsApp':'your email app'} — tap Send once`)
+          );
+        })()
+      )
+    ),
+
+    /* Add Reminder */
+    modal==='addReminder'&&h('div',{style:{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:50,display:'flex',alignItems:'flex-end'},onClick:()=>setModal(null)},
+      h('div',{className:'slide',style:{background:SURFACE,borderRadius:'20px 20px 0 0',padding:'20px 20px 32px',width:'100%',maxWidth:430,margin:'0 auto',maxHeight:'90vh',overflowY:'auto'},onClick:e=>e.stopPropagation()},
+        h('div',{style:{width:36,height:4,borderRadius:2,background:GRAY3,margin:'0 auto 14px'}}),
+        h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}},
+          h('div',{style:{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:18,color:DARK}},'New Reminder'),
+          h('button',{onClick:()=>setModal(null),style:{background:GRAY2,border:'none',borderRadius:8,padding:'5px 11px',fontSize:12,color:GRAY,cursor:'pointer'}},'Cancel')
+        ),
+        h('input',{value:rForm.title,onChange:e=>setRForm(f=>({...f,title:e.target.value})),placeholder:'What to remember? *',className:'inp',style:{marginBottom:10}}),
+        h('textarea',{value:rForm.note,onChange:e=>setRForm(f=>({...f,note:e.target.value})),placeholder:'Add a note (optional)',rows:2,className:'inp',style:{resize:'none',marginBottom:10}}),
+        h('div',{style:{display:'flex',gap:8,marginBottom:10}},
+          h('select',{value:rForm.category,onChange:e=>setRForm(f=>({...f,category:e.target.value})),className:'inp select',style:{flex:1}},
+            Object.entries(CATS).map(([k,v])=>h('option',{key:k,value:k},`${v} ${k}`))
+          ),
+          h('select',{value:rForm.priority,onChange:e=>setRForm(f=>({...f,priority:e.target.value})),className:'inp',style:{flex:1}},
+            h('option',{value:'high'},'🔴 High'),h('option',{value:'medium'},'🟡 Medium'),h('option',{value:'low'},'🟢 Low')
+          )
+        ),
+        h('input',{type:'datetime-local',value:rForm.dueAt,onChange:e=>setRForm(f=>({...f,dueAt:e.target.value})),className:'inp',style:{marginBottom:14}}),
+        h('button',{onClick:()=>addReminder({...rForm,dueAt:rForm.dueAt?new Date(rForm.dueAt).toISOString():''}),disabled:!rForm.title.trim(),className:'btn-primary'},'🔔 Save Reminder')
+      )
+    ),
+
+    /* Add Event */
+    modal==='addEvent'&&h('div',{style:{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:50,display:'flex',alignItems:'flex-end'},onClick:()=>setModal(null)},
+      h('div',{className:'slide',style:{background:SURFACE,borderRadius:'20px 20px 0 0',padding:'20px 20px 32px',width:'100%',maxWidth:430,margin:'0 auto',maxHeight:'90vh',overflowY:'auto'},onClick:e=>e.stopPropagation()},
+        h('div',{style:{width:36,height:4,borderRadius:2,background:GRAY3,margin:'0 auto 14px'}}),
+        h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}},
+          h('div',{style:{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:18,color:DARK}},'Add Event'),
+          h('button',{onClick:()=>setModal(null),style:{background:GRAY2,border:'none',borderRadius:8,padding:'5px 11px',fontSize:12,color:GRAY,cursor:'pointer'}},'Cancel')
+        ),
+        [['Event title *','title'],['Location (optional)','location'],['Notes','note']].map(([ph,field])=>
+          h('input',{key:field,value:eForm[field],onChange:e=>setEForm(f=>({...f,[field]:e.target.value})),placeholder:ph,className:'inp',style:{marginBottom:10}})
+        ),
+        h('div',{style:{display:'flex',gap:8,marginBottom:14}},
+          h('input',{type:'date',value:eForm.date,onChange:e=>setEForm(f=>({...f,date:e.target.value})),className:'inp',style:{flex:1}}),
+          h('input',{type:'time',value:eForm.time,onChange:e=>setEForm(f=>({...f,time:e.target.value})),className:'inp',style:{flex:1}})
+        ),
+        h('button',{onClick:()=>addEvent(eForm),disabled:!eForm.title.trim()||!eForm.date,style:{background:eForm.title.trim()&&eForm.date?'linear-gradient(135deg,#5856d6,#3634a3)':'#e5e5ea',border:'none',borderRadius:14,padding:'13px 0',fontSize:15,fontWeight:700,color:eForm.title.trim()&&eForm.date?'#fff':'#aeaeb2',cursor:'pointer',width:'100%'}},'📅 Save Event')
+      )
+    ),
+
+    /* Add Note */
+    modal==='addNote'&&h('div',{style:{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:50,display:'flex',alignItems:'flex-end'},onClick:()=>setModal(null)},
+      h('div',{className:'slide',style:{background:SURFACE,borderRadius:'20px 20px 0 0',padding:'20px 20px 32px',width:'100%',maxWidth:430,margin:'0 auto',maxHeight:'90vh',overflowY:'auto'},onClick:e=>e.stopPropagation()},
+        h('div',{style:{width:36,height:4,borderRadius:2,background:GRAY3,margin:'0 auto 14px'}}),
+        h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}},
+          h('div',{style:{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:18,color:DARK}},'New Note / To-Do'),
+          h('button',{onClick:()=>setModal(null),style:{background:GRAY2,border:'none',borderRadius:8,padding:'5px 11px',fontSize:12,color:GRAY,cursor:'pointer'}},'Cancel')
+        ),
+        h('div',{className:'segment',style:{marginBottom:12}},
+          [['note','📝 Note'],['todo','✅ To-Do']].map(([t,label])=>h('button',{key:t,onClick:()=>setNForm(f=>({...f,type:t})),className:`seg-btn${nForm.type===t?' active':''}`},label))
+        ),
+        h('input',{value:nForm.title,onChange:e=>setNForm(f=>({...f,title:e.target.value})),placeholder:'Title *',className:'inp',style:{marginBottom:10}}),
+        nForm.type==='note'&&h('textarea',{value:nForm.body,onChange:e=>setNForm(f=>({...f,body:e.target.value})),placeholder:'Write your note…',rows:4,className:'inp',style:{resize:'none',marginBottom:10}}),
+        nForm.type==='todo'&&h('div',{style:{marginBottom:10}},
+          nForm.todos.map(t=>h('div',{key:t.id,style:{display:'flex',alignItems:'center',gap:8,marginBottom:6}},
+            h('div',{style:{width:18,height:18,borderRadius:5,border:`2px solid ${GRAY3}`,flexShrink:0}}),
+            h('span',{style:{flex:1,fontSize:13,color:DARK}},t.text),
+            h('button',{onClick:()=>setNForm(f=>({...f,todos:f.todos.filter(x=>x.id!==t.id)})),style:{background:'none',border:'none',color:GRAY,fontSize:13,cursor:'pointer'}},'✕')
+          )),
+          h('div',{style:{display:'flex',gap:8}},
+            h('input',{value:newTodo,onChange:e=>setNewTodo(e.target.value),onKeyDown:e=>{if(e.key==='Enter'&&newTodo.trim()){setNForm(f=>({...f,todos:[...f.todos,{id:Date.now(),text:newTodo.trim(),done:false}]}));setNewTodo('');}},placeholder:'Add item — press Enter',className:'inp',style:{flex:1}}),
+            h('button',{onClick:()=>{if(newTodo.trim()){setNForm(f=>({...f,todos:[...f.todos,{id:Date.now(),text:newTodo.trim(),done:false}]}));setNewTodo('');}},style:{background:AMBER,border:'none',borderRadius:10,padding:'10px 14px',fontSize:14,fontWeight:700,color:'#fff',cursor:'pointer'}},'+')
+          )
+        ),
+        h('button',{onClick:()=>addNote(nForm),disabled:!nForm.title.trim(),className:'btn-primary'},`Save ${nForm.type==='todo'?'To-Do':'Note'}`)
+      )
+    ),
+
+    /* Schedule Message */
+    modal==='addScheduled'&&h('div',{style:{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:50,display:'flex',alignItems:'flex-end'},onClick:()=>setModal(null)},
+      h('div',{className:'slide',style:{background:SURFACE,borderRadius:'20px 20px 0 0',padding:'20px 20px 32px',width:'100%',maxWidth:430,margin:'0 auto',maxHeight:'90vh',overflowY:'auto'},onClick:e=>e.stopPropagation()},
+        h('div',{style:{width:36,height:4,borderRadius:2,background:GRAY3,margin:'0 auto 14px'}}),
+        h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}},
+          h('div',{style:{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:18,color:DARK}},'📆 Schedule Message'),
+          h('button',{onClick:()=>setModal(null),style:{background:GRAY2,border:'none',borderRadius:8,padding:'5px 11px',fontSize:12,color:GRAY,cursor:'pointer'}},'Cancel')
+        ),
+        h('div',{style:{fontSize:12,color:GRAY,marginBottom:12,lineHeight:1.6}},'Set a message to send at a specific date and time. Ruth will remind you when it\'s time to send.'),
+        /* To contact */
+        h('label',{style:{fontSize:12,fontWeight:600,color:DARK,display:'block',marginBottom:4}},'Send to'),
+        h('select',{value:schedForm.to,onChange:e=>setSchedForm(f=>({...f,to:e.target.value})),className:'inp',style:{marginBottom:10}},
+          h('option',{value:''},'Select contact…'),
+          contacts.map(c=>h('option',{key:c.id,value:c.name},c.name))
+        ),
+        /* Via */
+        h('label',{style:{fontSize:12,fontWeight:600,color:DARK,display:'block',marginBottom:4}},'Send via'),
+        h('div',{className:'segment',style:{marginBottom:10}},
+          [['whatsapp','💬 WhatsApp'],['email','✉️ Email'],['sms','📱 SMS']].map(([v,label])=>h('button',{key:v,onClick:()=>setSchedForm(f=>({...f,via:v})),className:`seg-btn${schedForm.via===v?' active':''}`},label))
+        ),
+        /* Message */
+        h('label',{style:{fontSize:12,fontWeight:600,color:DARK,display:'block',marginBottom:4}},'Message'),
+        h('textarea',{value:schedForm.message,onChange:e=>setSchedForm(f=>({...f,message:e.target.value})),placeholder:'Write your message…',rows:3,className:'inp',style:{resize:'none',marginBottom:10}}),
+        /* Date/Time picker */
+        h('label',{style:{fontSize:12,fontWeight:600,color:DARK,display:'block',marginBottom:4}},'Schedule for'),
+        h('input',{type:'datetime-local',value:schedForm.sendAt,onChange:e=>setSchedForm(f=>({...f,sendAt:e.target.value})),className:'inp',style:{marginBottom:14}}),
+        h('button',{onClick:()=>addScheduled({...schedForm,sendAt:schedForm.sendAt?new Date(schedForm.sendAt).toISOString():''}),disabled:!schedForm.to||!schedForm.message.trim()||!schedForm.sendAt,className:'btn-primary'},'📆 Schedule Message')
+      )
+    ),
+
+    /* ══ SETTINGS MODAL ══ */
+    modal==='settings'&&h('div',{style:{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:50,display:'flex',alignItems:'flex-end'},onClick:()=>setModal(null)},
+      h('div',{className:'slide',style:{background:SURFACE,borderRadius:'20px 20px 0 0',width:'100%',maxWidth:430,margin:'0 auto',maxHeight:'92vh',overflowY:'auto'},onClick:e=>e.stopPropagation()},
+        h('div',{style:{padding:'20px 20px 0'}}),
+        h('div',{style:{width:36,height:4,borderRadius:2,background:GRAY3,margin:'0 auto 16px'}}),
+        h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'0 20px',marginBottom:16}},
+          h('div',{style:{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:20,color:DARK}},'Settings ⚙️'),
+          h('button',{onClick:()=>setModal(null),style:{background:GRAY2,border:'none',borderRadius:8,padding:'5px 11px',fontSize:12,color:GRAY,cursor:'pointer'}},'Done')
+        ),
+        /* Settings tab bar */
+        h('div',{className:'segment',style:{margin:'0 20px 16px'}},
+          [['api','🔑 API'],['notifs','🔔 Alerts'],['contacts','👥 Contacts'],['memory','🧠 Memory'],['about','ℹ️ About']].map(([t,label])=>h('button',{key:t,onClick:()=>setSettingsTab(t),className:`seg-btn${settingsTab===t?' active':''}`},label))
+        ),
+
+        h('div',{style:{padding:'0 20px 32px'}},
+
+          /* ── API TAB ── */
+          settingsTab==='api'&&h(React.Fragment,null,
+            /* Provider toggle */
+            h('div',{className:'card',style:{padding:16,marginBottom:14}},
+              h('div',{style:{fontSize:12,fontWeight:700,color:GRAY,textTransform:'uppercase',letterSpacing:0.8,marginBottom:12}},'AI Provider'),
+              h('div',{className:'segment'},
+                [['anthropic','🤖 Anthropic'],['gemini','✨ Gemini']].map(([p,label])=>h('button',{key:p,onClick:()=>setActiveProvider(p),className:`seg-btn${activeProvider===p?' active':''}`},label))
+              ),
+              h('div',{style:{fontSize:11,color:GRAY,marginTop:8,textAlign:'center'}},
+                activeProvider==='anthropic'?'Using Claude — Best for accuracy and nuance':'Using Gemini — Larger free tier, great for everyday tasks'
+              )
+            ),
+
+            /* Anthropic */
+            h('div',{className:'card',style:{padding:16,marginBottom:12,opacity:activeProvider==='anthropic'?1:0.5}},
+              h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}},
+                h('div',null,
+                  h('div',{style:{fontWeight:700,fontSize:14,color:DARK}},'Anthropic (Claude)'),
+                  h('div',{style:{fontSize:11,color:GRAY}},'console.anthropic.com')
+                ),
+                h('div',{style:{width:8,height:8,borderRadius:'50%',background:anthropicKey?GREEN:GRAY3}})
+              ),
+              h('input',{type:'password',value:anthropicKey,onChange:e=>setAnthropicKey(e.target.value),placeholder:'sk-ant-api03-…',className:'inp',style:{marginBottom:8}}),
+              h('select',{value:anthropicModel,onChange:e=>setAnthropicModel(e.target.value),className:'inp'},
+                h('option',{value:'claude-sonnet-4-20250514'},'Claude Sonnet 4 (Recommended)'),
+                h('option',{value:'claude-haiku-4-5-20251001'},'Claude Haiku 4.5 (Faster, cheaper)')
+              )
+            ),
+
+            /* Gemini */
+            h('div',{className:'card',style:{padding:16,marginBottom:14,opacity:activeProvider==='gemini'?1:0.5}},
+              h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}},
+                h('div',null,
+                  h('div',{style:{fontWeight:700,fontSize:14,color:DARK}},'Google Gemini'),
+                  h('div',{style:{fontSize:11,color:GRAY}},'aistudio.google.com — Has free tier')
+                ),
+                h('div',{style:{width:8,height:8,borderRadius:'50%',background:geminiKey?GREEN:GRAY3}})
+              ),
+              h('input',{type:'password',value:geminiKey,onChange:e=>setGeminiKey(e.target.value),placeholder:'AIza…',className:'inp',style:{marginBottom:8}}),
+              h('select',{value:geminiModel,onChange:e=>setGeminiModel(e.target.value),className:'inp'},
+                h('option',{value:'gemini-2.0-flash'},'Gemini 2.0 Flash (Fastest)'),
+                h('option',{value:'gemini-1.5-pro'},'Gemini 1.5 Pro (Best quality)')
+              )
+            ),
+
+            /* Usage Estimator */
+            h('div',{className:'card',style:{padding:16}},
+              h('div',{style:{fontWeight:700,fontSize:14,color:DARK,marginBottom:12}},'📊 Usage Estimator'),
+              h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:4}},
+                h('span',{style:{fontSize:12,color:GRAY}},'Current model'),
+                h('span',{style:{fontSize:12,fontWeight:600,color:DARK}},costs.name)
+              ),
+              h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:4}},
+                h('span',{style:{fontSize:12,color:GRAY}},'Total API calls'),
+                h('span',{style:{fontSize:12,fontWeight:600,color:DARK}},usage.totalCalls)
+              ),
+              h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:4}},
+                h('span',{style:{fontSize:12,color:GRAY}},'Input tokens used'),
+                h('span',{style:{fontSize:12,fontWeight:600,color:DARK}},(usage.totalInputTokens).toLocaleString())
+              ),
+              h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:4}},
+                h('span',{style:{fontSize:12,color:GRAY}},'Output tokens used'),
+                h('span',{style:{fontSize:12,fontWeight:600,color:DARK}},(usage.totalOutputTokens).toLocaleString())
+              ),
+              h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:10}},
+                h('span',{style:{fontSize:12,color:GRAY}},'Estimated cost'),
+                h('span',{style:{fontSize:12,fontWeight:700,color:totalCostUSD>4?RED:totalCostUSD>2?AMBER:GREEN}},`$${totalCostUSD.toFixed(4)}`)
+              ),
+              h('div',{style:{marginBottom:8}},
+                h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:4}},
+                  h('span',{style:{fontSize:11,color:GRAY}},'Budget usage (of $5)'),
+                  h('span',{style:{fontSize:11,fontWeight:600,color:DARK}},`${budgetPct.toFixed(1)}%`)
+                ),
+                h('div',{className:'usage-bar'},
+                  h('div',{className:'usage-fill',style:{width:`${budgetPct}%`,background:budgetPct>80?RED:budgetPct>50?AMBER:GREEN}})
+                )
+              ),
+              h('div',{style:{background:GRAY2,borderRadius:10,padding:'10px 12px',marginBottom:10}},
+                h('div',{style:{fontSize:11,fontWeight:600,color:DARK,marginBottom:4}},'Cost per model (per 1M tokens)'),
+                Object.entries(MODEL_COSTS).map(([key,val])=>
+                  h('div',{key,style:{display:'flex',justifyContent:'space-between',marginBottom:2}},
+                    h('span',{style:{fontSize:11,color:GRAY}},val.name),
+                    h('span',{style:{fontSize:11,color:DARK}},`$${val.input} in / $${val.output} out`)
+                  )
+                )
+              ),
+              h('button',{onClick:()=>{setUsage({totalInputTokens:0,totalOutputTokens:0,totalCalls:0,sessions:[]});toast('Usage reset','success');},style:{background:GRAY2,border:`1px solid ${GRAY3}`,borderRadius:10,padding:'8px 14px',fontSize:12,color:GRAY,cursor:'pointer',width:'100%'}},'Reset Usage Stats')
+            )
+          ),
+
+          /* ── ALERTS TAB ── */
+          settingsTab==='notifs'&&h(React.Fragment,null,
+            h('div',{className:'card',style:{padding:16,marginBottom:12}},
+              h('div',{style:{fontWeight:700,fontSize:14,color:DARK,marginBottom:4}},'Notifications'),
+              h('div',{style:{fontSize:12,color:GRAY,marginBottom:12}},'Allow Ruth to send you alerts even when the app is in the background.'),
+              h('button',{onClick:reqNotif,style:{width:'100%',background:notifPerm==='granted'?'#f0faf4':ROSE,border:'none',borderRadius:12,padding:12,fontSize:14,fontWeight:700,color:notifPerm==='granted'?GREEN:'#fff',cursor:'pointer'}},notifPerm==='granted'?'✓ Notifications Enabled':'Enable Notifications'),
+              notifPerm==='denied'&&h('div',{style:{fontSize:11,color:RED,marginTop:8,textAlign:'center'}},'Notifications blocked. Enable in your phone\'s browser settings.')
+            ),
+            h('div',{className:'card',style:{padding:16,marginBottom:12}},
+              h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between'}},
+                h('div',null,
+                  h('div',{style:{fontWeight:700,fontSize:14,color:DARK}},'Ruth speaks out loud'),
+                  h('div',{style:{fontSize:12,color:GRAY,marginTop:2}},'Toggle with 🔊 button in header')
+                ),
+                h('label',{className:'toggle'},
+                  h('input',{type:'checkbox',checked:voiceMode,onChange:()=>setVoiceMode(v=>!v)}),
+                  h('span',{className:'toggle-slider'})
+                )
+              )
+            ),
+            h('div',{className:'card',style:{padding:16}},
+              h('div',{style:{fontWeight:700,fontSize:14,color:DARK,marginBottom:8}},'Test notification sound'),
+              h('div',{style:{display:'flex',gap:8}},
+                h('button',{onClick:()=>playSound('reminder'),style:{flex:1,background:ROSE_BG,border:`1.5px solid ${ROSE}30`,borderRadius:10,padding:'10px 0',fontSize:13,fontWeight:600,color:ROSE,cursor:'pointer'}},'🔔 Reminder'),
+                h('button',{onClick:()=>playSound('calendar'),style:{flex:1,background:'#f5f5ff',border:'1.5px solid #5856d630',borderRadius:10,padding:'10px 0',fontSize:13,fontWeight:600,color:'#5856d6',cursor:'pointer'}},'📅 Calendar')
+              )
+            )
+          ),
+
+          /* ── CONTACTS TAB ── */
+          settingsTab==='contacts'&&h(React.Fragment,null,
+            h('button',{onClick:pickContacts,className:'btn-primary',style:{marginBottom:10}},'📱 Import from Phone Contacts'),
+            h('div',{style:{fontSize:11,color:GRAY,textAlign:'center',marginBottom:14}},'Chrome on Android only. Add manually on iPhone.'),
+            h('div',{className:'card',style:{padding:14,marginBottom:12}},
+              h('div',{style:{fontSize:12,fontWeight:600,color:GRAY,textTransform:'uppercase',letterSpacing:0.8,marginBottom:10}},'Add Manually'),
+              [['Name','name'],['Phone (+country code)','phone'],['Email','email']].map(([ph,field])=>
+                h('input',{key:field,value:nContact[field],onChange:e=>setNContact(n=>({...n,[field]:e.target.value})),placeholder:ph,className:'inp',style:{marginBottom:8}})
+              ),
+              h('button',{onClick:()=>{if(!nContact.name.trim())return;setContacts(c=>[...c,{id:Date.now(),...nContact}]);setNContact({name:'',phone:'',email:''});toast('Contact added','success');},className:'btn-primary'},'Add Contact')
+            ),
+            h('div',{style:{fontSize:12,fontWeight:600,color:GRAY,textTransform:'uppercase',letterSpacing:0.8,marginBottom:8}},`Contacts (${contacts.length})`),
+            contacts.map(c=>h('div',{key:c.id,className:'card',style:{padding:'11px 14px',marginBottom:7,display:'flex',alignItems:'center',gap:10}},
+              h('div',{style:{width:36,height:36,borderRadius:'50%',background:ROSE_BG,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:800,color:ROSE,flexShrink:0}},c.name[0].toUpperCase()),
+              h('div',{style:{flex:1}},
+                h('div',{style:{fontWeight:600,fontSize:13,color:DARK}},c.name),
+                h('div',{style:{fontSize:11,color:GRAY}},`${c.phone}${c.email?' · '+c.email:''}`)
+              ),
+              h('button',{onClick:()=>setContacts(cs=>cs.filter(x=>x.id!==c.id)),style:{background:'#fff0f0',border:'none',borderRadius:7,padding:'4px 9px',fontSize:11,color:RED,cursor:'pointer',fontWeight:600}},'Remove')
+            ))
+          ),
+
+          /* ── MEMORY TAB ── */
+          settingsTab==='memory'&&h(React.Fragment,null,
+            h('div',{style:{fontSize:12,color:GRAY,lineHeight:1.65,marginBottom:14}},'Ruth learns about you from every conversation. Stored on your device only.'),
+            h('div',{style:{display:'flex',gap:8,marginBottom:12}},
+              h('input',{value:newMem,onChange:e=>setNewMem(e.target.value),placeholder:"Add something for Ruth to remember…",className:'inp',style:{flex:1}}),
+              h('button',{onClick:()=>{if(newMem.trim()){setMemory(m=>[...m,{fact:newMem.trim(),ts:Date.now()}]);setNewMem('');toast('Memory added','success');}},style:{background:ROSE,border:'none',borderRadius:10,padding:'10px 14px',fontSize:13,fontWeight:700,color:'#fff',cursor:'pointer'}},'+ Add')
+            ),
+            memory.length===0&&h('div',{style:{textAlign:'center',padding:'20px 0',color:GRAY,fontSize:13}},'No memories yet — keep chatting!'),
+            memory.map((m,i)=>h('div',{key:i,className:'card',style:{padding:'10px 13px',marginBottom:7,display:'flex',alignItems:'center',gap:9}},
+              h('span',{style:{fontSize:13}},'💡'),
+              h('span',{style:{flex:1,fontSize:13,color:DARK,lineHeight:1.5}},m.fact),
+              h('button',{onClick:()=>setMemory(mm=>mm.filter((_,j)=>j!==i)),style:{background:'none',border:'none',color:GRAY,fontSize:14,cursor:'pointer'}},'✕')
+            )),
+            memory.length>0&&h('button',{onClick:()=>{setMemory([]);toast('Memory cleared','success');},className:'btn-secondary',style:{marginTop:8}},'Clear All Memories')
+          ),
+
+          /* ── ABOUT TAB ── */
+          settingsTab==='about'&&h(React.Fragment,null,
+            h('div',{className:'card',style:{padding:20,marginBottom:12,textAlign:'center'}},
+              h('div',{style:{fontSize:48,marginBottom:8}},'👩'),
+              h('div',{style:{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:22,color:DARK,marginBottom:4}},'Ruth v6.0'),
+              h('div',{style:{fontSize:13,color:GRAY,marginBottom:12}},'Your Personal AI Assistant'),
+              h('div',{style:{background:ROSE_BG,borderRadius:12,padding:'10px 16px',fontSize:12,color:ROSE,fontWeight:500,marginBottom:8}},'Active Provider: '+(activeProvider==='anthropic'?costs.name:'Gemini')),
+              h('div',{style:{fontSize:11,color:GRAY}},'Built with ❤️ for Tonio Oko')
+            ),
+            h('div',{className:'card',style:{padding:16,marginBottom:12}},
+              h('div',{style:{fontWeight:700,fontSize:14,color:DARK,marginBottom:10}},'What Ruth can do'),
+              [['📞','Phone calls'],['💬','WhatsApp messages'],['✉️','Email compose'],['🌍','Translation'],['📧','Gmail & Outlook'],['🔔','Reminders + notifications'],['📅','Calendar events'],['📝','Notes & To-Do lists'],['🔍','AI Research'],['📆','Schedule messages'],['🧠','Learns about you'],['📊','API usage tracking']].map(([icon,feat])=>
+                h('div',{key:feat,style:{display:'flex',alignItems:'center',gap:8,marginBottom:5}},
+                  h('span',{style:{fontSize:14}},icon),
+                  h('span',{style:{fontSize:13,color:GRAY}},feat)
+                )
+              )
+            ),
+            h('button',{onClick:()=>{if(confirm('Reset ALL Ruth data? This cannot be undone.')){['r6_contacts','r6_reminders','r6_events','r6_notes','r6_memory','r6_history','r6_usage','r6_scheduled'].forEach(k=>localStorage.removeItem(k));window.location.reload();}},style:{width:'100%',background:'#fff0f0',border:`1.5px solid ${RED}30`,borderRadius:12,padding:'12px 0',fontSize:13,fontWeight:600,color:RED,cursor:'pointer'}},'Reset All Data')
+          )
+        )
+      )
+    ),
+
+    /* Toast stack */
+    h('div',{style:{position:'fixed',top:70,left:'50%',transform:'translateX(-50%)',zIndex:90,display:'flex',flexDirection:'column',gap:6,alignItems:'center',pointerEvents:'none'}},
+      toasts.map(t=>h('div',{key:t.id,className:'pop',style:{background:t.type==='success'?GREEN:t.type==='error'?RED:DARK,color:'#fff',borderRadius:20,padding:'9px 18px',fontSize:12,fontWeight:700,whiteSpace:'nowrap',boxShadow:'0 4px 16px rgba(0,0,0,0.15)'}},t.msg))
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(Ruth));
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script>
+</body>
+</html>
